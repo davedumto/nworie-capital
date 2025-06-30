@@ -66,7 +66,7 @@ const TestimonialCard: React.FC<TestimonialProps> = ({ quote, name, location, ra
   return (
     <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 h-full flex flex-col">
       {/* Quote Icon */}
-      <div className="text-6xl text-gray-300 mb-4 leading-none">"</div>
+      <div className="text-6xl text-gray-300 mb-4 leading-none">`</div>
       
       {/* Star Rating */}
       <StarRating rating={rating} />
@@ -147,10 +147,10 @@ export default function ClientTestimonials() {
               CLIENT STORIES
             </p>
             <h2 className="text-4xl md:text-5xl font-bold text-neutral mb-6 leading-tight">
-              Don't Take Our Word For It
+              Don`t Take Our Word For It
             </h2>
             <p className="text-xl text-gray-600 leading-relaxed max-w-2xl">
-              Hear from real clients who've trusted Nworie Capital to fuel their investments and business goals.
+              Hear from real clients who`ve trusted Nworie Capital to fuel their investments and business goals.
             </p>
           </div>
 

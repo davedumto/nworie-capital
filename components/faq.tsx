@@ -84,10 +84,10 @@ export default function FAQSection() {
             FAQS
           </p>
           <h2 className="text-4xl md:text-5xl font-bold text-neutral mb-6 leading-tight">
-            Got Questions? We've got Answers
+            Got Questions? We`ve got Answers
           </h2>
           <p className="text-xl text-gray-600 leading-relaxed mx-auto">
-            Find quick answers to your most common questions about Nworie Capital's lending programs and services.
+            Find quick answers to your most common questions about Nworie Capital`s lending programs and services.
           </p>
         </div>
 

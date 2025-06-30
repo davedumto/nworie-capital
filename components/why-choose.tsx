@@ -76,10 +76,10 @@ export default function WhyChooseUs() {
               WHY CHOOSE US?
             </p>
             <h2 className="text-4xl md:text-5xl font-bold text-neutral mb-6 leading-tight">
-              We're more than a lender. We're your trusted partner.
+              We`re more than a lender. We`re your trusted partner.
             </h2>
             <p className="text-xl text-gray-600 leading-relaxed max-w-4xl">
-              At Nworie Capital, we're dedicated to helping you succeed. With flexible funding options, fast approvals, and a personal touch, we make sure your investment goals are met every time.
+              At Nworie Capital, we`re dedicated to helping you succeed. With flexible funding options, fast approvals, and a personal touch, we make sure your investment goals are met every time.
             </p>
           </div>
 
