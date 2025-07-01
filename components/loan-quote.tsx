@@ -1,3 +1,4 @@
+// components/LoanQuoteDisplay.tsx
 'use client';
 
 import { LoanQuote } from '@/types/loan';
@@ -53,14 +54,29 @@ export function LoanQuoteDisplay({ quote, errors }: LoanQuoteDisplayProps) {
     return `${rate.toFixed(2)}%`;
   };
 
+  const getDrawScheduleDescription = (tier: string) => {
+    return tier === 'Gold' || tier === 'Platinum' ? 'Advanced Draws' : 'Reimbursement Draws';
+  };
+
+  const getLoanTermDescription = (months: number) => {
+    if (months === 24) return '24 months (Long-term/Ground-up construction)';
+    if (months === 12) return '12 months (Short-term/Renovation)';
+    return `${months} months`;
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           Loan Quote Breakdown
-          <Badge variant="secondary" className="ml-2">
-            {quote.investorTier} Tier
-          </Badge>
+          <div className="flex items-center space-x-2">
+            <Badge variant={quote.investorTier === 'Platinum' ? 'default' : quote.investorTier === 'Gold' ? 'secondary' : 'outline'}>
+              {quote.investorTier} Tier
+            </Badge>
+            <Badge variant="outline">
+              {formatPercentage(quote.interestRate)}
+            </Badge>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -78,7 +94,7 @@ export function LoanQuoteDisplay({ quote, errors }: LoanQuoteDisplayProps) {
               <p><span className="font-medium">Loan Amount Offered:</span> {formatCurrency(quote.loanAmount)}</p>
               <p><span className="font-medium">Credit Score:</span> {quote.creditScore} ({quote.investorTier} Tier)</p>
               <p><span className="font-medium">Interest Rate:</span> {formatPercentage(quote.interestRate)} Fixed</p>
-              <p><span className="font-medium">Loan Term:</span> {quote.loanTerm} Months</p>
+              <p><span className="font-medium">Loan Term:</span> {getLoanTermDescription(quote.loanTerm)}</p>
             </div>
           </div>
         </div>
@@ -87,31 +103,33 @@ export function LoanQuoteDisplay({ quote, errors }: LoanQuoteDisplayProps) {
 
         {/* Loan Terms Section */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Loan Terms</h3>
+          <h3 className="text-lg font-semibold">Loan Terms & Structure</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <p><span className="font-medium">Repayment Type:</span> {quote.repaymentType}</p>
-              <p><span className="font-medium">Monthly Payment:</span> {formatCurrency(quote.monthlyPayment)}</p>
+              <p><span className="font-medium">Repayment Type:</span> {quote.repaymentType} (Interest only on drawn funds)</p>
+              <p><span className="font-medium">Monthly Payment:</span> {formatCurrency(quote.monthlyPayment)} (No payments during construction)</p>
               <p><span className="font-medium">ARV Cap:</span> {formatCurrency(quote.arvCap)} (75% of ARV)</p>
-              <p><span className="font-medium">Initial Advance:</span> {formatCurrency(quote.initialAdvance)}</p>
+              <p><span className="font-medium">Initial Advance:</span> {formatCurrency(quote.initialAdvance)} (90% of purchase)</p>
             </div>
             <div className="space-y-2">
-              <p><span className="font-medium">Draw Schedule:</span> {quote.drawSchedule}</p>
+              <p><span className="font-medium">Draw Schedule:</span> {getDrawScheduleDescription(quote.investorTier)}</p>
               <p><span className="font-medium">Payment Holdback:</span> {formatCurrency(quote.paymentHoldback)}</p>
               <p><span className="font-medium">Monthly Escrow:</span> {formatCurrency(quote.monthlyEscrow)}</p>
-              <p><span className="font-medium">Earnest Money Deposit:</span> {formatCurrency(quote.earnestMoneyDeposit)}</p>
+              {quote.earnestMoneyDeposit > 0 && (
+                <p><span className="font-medium">Earnest Money Deposit:</span> {formatCurrency(quote.earnestMoneyDeposit)}</p>
+              )}
             </div>
           </div>
         </div>
 
         <Separator />
 
-        {/* Fees and Closing Costs */}
+        {/* Updated Fees and Closing Costs */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Fees and Closing Costs</h3>
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span>Origination Fee (2 points):</span>
+              <span>Origination Fee (3 points):</span>
               <span>{formatCurrency(quote.fees.originationFee)}</span>
             </div>
             <div className="flex justify-between">
@@ -144,6 +162,9 @@ export function LoanQuoteDisplay({ quote, errors }: LoanQuoteDisplayProps) {
               <span>{formatCurrency(quote.fees.totalClosingCosts)}</span>
             </div>
           </div>
+          <p className="text-xs text-muted-foreground">
+            *Tax and insurance estimates are based on your provided property details
+          </p>
         </div>
 
         <Separator />
@@ -154,38 +175,85 @@ export function LoanQuoteDisplay({ quote, errors }: LoanQuoteDisplayProps) {
           <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="font-medium">Down Payment:</span>
+                <span className="font-medium">Down Payment ({((quote.purchasePrice - quote.initialAdvance) / quote.purchasePrice * 100).toFixed(0)}%):</span>
                 <span>{formatCurrency(quote.downPayment)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="font-medium">Total Closing Costs:</span>
                 <span>{formatCurrency(quote.fees.totalClosingCosts)}</span>
               </div>
+              {quote.earnestMoneyDeposit > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">Earnest Money:</span>
+                  <span>{formatCurrency(quote.earnestMoneyDeposit)}</span>
+                </div>
+              )}
               <Separator />
               <div className="flex justify-between items-center text-lg font-semibold">
-                <span>Total from Borrower:</span>
+                <span>Total Cash Required from Borrower:</span>
                 <span>{formatCurrency(quote.totalFromBorrower)}</span>
               </div>
               <div className="flex justify-between items-center text-sm text-muted-foreground">
-                <span>Liquidity Check Required:</span>
+                <span>Liquidity Verification Required:</span>
                 <span>{formatCurrency(quote.liquidityRequired)}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Important Notes */}
+        {/* Updated Important Features */}
+        <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg">
+          <h4 className="font-semibold mb-2">Loan Features & Benefits:</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+            <ul className="list-disc list-inside space-y-1">
+              <li>No monthly payments during {quote.loanTerm === 24 ? 'construction' : 'renovation'}</li>
+              <li>Interest charged only on drawn funds (Dutch-style)</li>
+              <li>100% rehab coverage available</li>
+              <li>Fast closing: 5 days with full documentation</li>
+            </ul>
+            <ul className="list-disc list-inside space-y-1">
+              <li>Only soft credit check required to close</li>
+              <li>No tax returns, W-2s, or DTI required</li>
+              <li>{getDrawScheduleDescription(quote.investorTier)} based on {quote.investorTier} tier</li>
+              <li>Up to {quote.arvCap === quote.arv * 0.75 ? '75%' : '90%'} loan-to-value</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Tier-Specific Information */}
         <div className="bg-yellow-50 dark:bg-yellow-950 p-4 rounded-lg">
-          <h4 className="font-semibold mb-2">Important Notes:</h4>
+          <h4 className="font-semibold mb-2">{quote.investorTier} Tier Benefits:</h4>
           <ul className="list-disc list-inside space-y-1 text-sm">
-            <li>No monthly payments for {quote.loanTerm > 24 ? 'first 5 months' : 'loan term'}</li>
-            <li>Interest charged only on drawn funds (Dutch-style)</li>
-            <li>100% rehab coverage available</li>
-            <li>Fast closing: 5 days with full documentation</li>
-            <li>No tax returns, W-2s, or DTI required</li>
+            <li><strong>Interest Rate:</strong> {formatPercentage(quote.interestRate)} (Based on experience level)</li>
+            <li><strong>Draw Schedule:</strong> {getDrawScheduleDescription(quote.investorTier)}</li>
+            {quote.investorTier === 'Gold' || quote.investorTier === 'Platinum' ? (
+              <>
+                <li><strong>Advanced Draws:</strong> Get funds upfront with 10% down</li>
+                <li><strong>Nationwide Construction:</strong> Ground-up projects available anywhere</li>
+              </>
+            ) : (
+              <>
+                <li><strong>Reimbursement Draws:</strong> Get reimbursed for completed work</li>
+                <li><strong>Construction Loans:</strong> Available in Texas only</li>
+              </>
+            )}
           </ul>
+        </div>
+
+        {/* Payment Holdback Explanation */}
+        <div className="bg-orange-50 dark:bg-orange-950 p-4 rounded-lg">
+          <h4 className="font-semibold mb-2">Payment Holdback Calculation:</h4>
+          <p className="text-sm">
+            Holdback Amount = (Initial Advance + Rehab Budget) × Interest Rate<br/>
+            {formatCurrency(quote.initialAdvance)} + {formatCurrency(quote.rehabBudget)} × {formatPercentage(quote.interestRate)} = <strong>{formatCurrency(quote.paymentHoldback)}</strong>
+          </p>
+          <p className="text-xs text-muted-foreground mt-2">
+            This amount is held until project completion to ensure loan performance.
+          </p>
         </div>
       </CardContent>
     </Card>
   );
 }
+
+export default LoanQuoteDisplay;

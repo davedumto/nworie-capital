@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -9,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Moon, Sun, Calculator } from 'lucide-react';
 import { useTheme } from 'next-themes';
-
 import { BorrowerInfo, PropertyInfo, PropertyDetails, LoanQuote } from '@/types/loan';
 import { LoanCalculator } from '@/utils/loan-calculator';
 import { BorrowerInfoForm } from '@/components/borrower-info';
@@ -21,25 +19,44 @@ import { LoanQuoteDisplay } from '@/components/loan-quote';
 export default function LoanApplication() {
   const { theme, setTheme } = useTheme();
   const [currentTab, setCurrentTab] = useState('borrower');
-  const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
+  const [selectedProgram, setSelectedProgram] = useState('');
   const [selectedTerm, setSelectedTerm] = useState('');
   const [quote, setQuote] = useState<LoanQuote | null>(null);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
+  // Helper function to convert string to number safely
+  const toNumber = (value: string | number | undefined): number => {
+    if (typeof value === 'number') return value;
+    if (typeof value === 'string') {
+      const num = Number(value);
+      return isNaN(num) ? 0 : num;
+    }
+    return 0;
+  };
+
+  // Helper function to check if a field has a meaningful value
+  const hasValue = (field: string | number | undefined): boolean => {
+    if (typeof field === 'string') {
+      return field.trim() !== '';
+    }
+    return field !== 0 && field !== null && field !== undefined;
+  };
 
   const borrowerForm = useForm<BorrowerInfo>({
     defaultValues: {
       guarantorFullName: '',
       guarantorEmail: '',
       phoneNumber: '',
-      investmentProperties: 0,
-      fico: 700,
-      experience: 0,
+      propertiesOwned: '', // String for better UX
+      propertiesSold: '', // String for better UX
+      totalExperience: '', // String for better UX
+      fico: '', // String for better UX
       socialSecurity: '',
       usCitizen: false,
       dateOfBirth: '',
       primaryResidenceAddress: '',
       ownOrRentPrimary: 'own',
-      yearsAtPrimaryResidence: 0,
+      yearsAtPrimaryResidence: '', // String for better UX
       entityName: '',
       einNumber: ''
     }
@@ -48,40 +65,44 @@ export default function LoanApplication() {
   const propertyForm = useForm<PropertyInfo>({
     defaultValues: {
       subjectPropertyAddress: '',
+      city: '',
+      zipCode: '',
       propertyType: '',
-      numberOfUnits: 1,
-      purchasePrice: 0,
-      asIsValue: 0,
+      numberOfUnits: '', // String for better UX
+      purchasePrice: '', // String for better UX
+      asIsValue: '', // String for better UX
       purchaseDate: '',
-      estimatedPayoff: 0,
-      rehabNeeded: 0,
-      rehabAlreadyCompleted: 0,
-      arv: 0,
-      hasComps: false
+      estimatedPayoff: '', // String for better UX
+      rehabNeeded: '', // String for better UX
+      rehabAlreadyCompleted: '', // String for better UX
+      arv: '', // String for better UX
+      hasComps: false,
+      isPurchase: true,
+      earnestMoneyDeposit: '' // String for better UX
     }
   });
 
   const detailsForm = useForm<PropertyDetails>({
     defaultValues: {
-      loanAmountRequested: 0,
-      liquidCashAvailable: 0,
-      currentSquareFootage: 0,
-      afterRenovationSquareFootage: 0,
-      currentBedrooms: 0,
-      afterRenovationBedrooms: 0,
-      currentBathrooms: 0,
-      afterRenovationBathrooms: 0,
-      monthlyIncome: 0,
+      liquidCashAvailable: '', // String for better UX
+      currentSquareFootage: '', // String for better UX
+      afterRenovationSquareFootage: '', // String for better UX
+      currentBedrooms: '', // String for better UX
+      afterRenovationBedrooms: '', // String for better UX
+      currentBathrooms: '', // String for better UX
+      afterRenovationBathrooms: '', // String for better UX
+      monthlyIncome: '', // String for better UX
       isActualRent: false,
       hasActiveLease: false,
-      annualTaxes: 0,
-      annualInsurance: 0,
-      annualFloodInsurance: 0,
-      annualHOA: 0,
+      annualTaxes: '', // String for better UX
+      annualInsurance: '', // String for better UX
+      annualFloodInsurance: '', // String for better UX
+      annualHOA: '', // String for better UX
       propertyManager: '',
       sponsorIntentToOccupy: false,
       existingLiens: false,
-      existingLiensAmount: 0
+      existingLiensAmount: '', // String for better UX
+      isIncomeLoan: false
     }
   });
 
@@ -93,42 +114,103 @@ export default function LoanApplication() {
     let completedFields = 0;
     let totalFields = 0;
 
-    // Count borrower form completion
-    const borrowerFields = Object.values(borrowerData);
-    totalFields += borrowerFields.length;
-    completedFields += borrowerFields.filter(field => 
-      field !== '' && field !== 0 && field !== false
-    ).length;
+    // Required borrower fields
+    const requiredBorrowerFields = [
+      borrowerData.guarantorFullName,
+      borrowerData.guarantorEmail,
+      borrowerData.phoneNumber,
+      borrowerData.fico,
+      borrowerData.socialSecurity,
+      borrowerData.dateOfBirth,
+      borrowerData.primaryResidenceAddress
+    ];
+    totalFields += requiredBorrowerFields.length;
+    completedFields += requiredBorrowerFields.filter(field => hasValue(field)).length;
 
-    // Count property form completion
-    const propertyFields = Object.values(propertyData);
-    totalFields += propertyFields.length;
-    completedFields += propertyFields.filter(field => 
-      field !== '' && field !== 0 && field !== false
-    ).length;
+    // Required property fields
+    const requiredPropertyFields = [
+      propertyData.subjectPropertyAddress,
+      propertyData.city,
+      propertyData.zipCode,
+      propertyData.propertyType,
+      propertyData.numberOfUnits,
+      propertyData.purchasePrice,
+      propertyData.asIsValue,
+      propertyData.arv
+    ];
+    totalFields += requiredPropertyFields.length;
+    completedFields += requiredPropertyFields.filter(field => hasValue(field)).length;
 
-    // Count details form completion
-    const detailsFields = Object.values(detailsData);
-    totalFields += detailsFields.length;
-    completedFields += detailsFields.filter(field => 
-      field !== '' && field !== 0 && field !== false
-    ).length;
+    // Required details fields
+    const requiredDetailsFields = [
+      detailsData.liquidCashAvailable,
+      detailsData.currentSquareFootage,
+      detailsData.afterRenovationSquareFootage,
+      detailsData.annualTaxes,
+      detailsData.annualInsurance
+    ];
+    totalFields += requiredDetailsFields.length;
+    completedFields += requiredDetailsFields.filter(field => hasValue(field)).length;
 
-    // Add program selection
+    // Program selection
     totalFields += 2;
-    if (selectedPrograms.length > 0) completedFields += 1;
+    if (selectedProgram) completedFields += 1;
     if (selectedTerm) completedFields += 1;
 
     return Math.round((completedFields / totalFields) * 100);
   };
 
+  // Convert form data to the format expected by LoanCalculator
+  const convertBorrowerData = (formData: BorrowerInfo) => ({
+    ...formData,
+    propertiesOwned: toNumber(formData.propertiesOwned),
+    propertiesSold: toNumber(formData.propertiesSold),
+    totalExperience: toNumber(formData.totalExperience),
+    fico: toNumber(formData.fico),
+    yearsAtPrimaryResidence: toNumber(formData.yearsAtPrimaryResidence)
+  });
+
+  const convertPropertyData = (formData: PropertyInfo) => ({
+    ...formData,
+    numberOfUnits: toNumber(formData.numberOfUnits),
+    purchasePrice: toNumber(formData.purchasePrice),
+    asIsValue: toNumber(formData.asIsValue),
+    estimatedPayoff: toNumber(formData.estimatedPayoff),
+    rehabNeeded: toNumber(formData.rehabNeeded),
+    rehabAlreadyCompleted: toNumber(formData.rehabAlreadyCompleted),
+    arv: toNumber(formData.arv),
+    earnestMoneyDeposit: toNumber(formData.earnestMoneyDeposit)
+  });
+
+  const convertDetailsData = (formData: PropertyDetails) => ({
+    ...formData,
+    liquidCashAvailable: toNumber(formData.liquidCashAvailable),
+    currentSquareFootage: toNumber(formData.currentSquareFootage),
+    afterRenovationSquareFootage: toNumber(formData.afterRenovationSquareFootage),
+    currentBedrooms: formData.currentBedrooms ? toNumber(formData.currentBedrooms) : undefined,
+    afterRenovationBedrooms: formData.afterRenovationBedrooms ? toNumber(formData.afterRenovationBedrooms) : undefined,
+    currentBathrooms: formData.currentBathrooms ? toNumber(formData.currentBathrooms) : undefined,
+    afterRenovationBathrooms: formData.afterRenovationBathrooms ? toNumber(formData.afterRenovationBathrooms) : undefined,
+    monthlyIncome: formData.monthlyIncome ? toNumber(formData.monthlyIncome) : undefined,
+    annualTaxes: toNumber(formData.annualTaxes),
+    annualInsurance: toNumber(formData.annualInsurance),
+    annualFloodInsurance: formData.annualFloodInsurance ? toNumber(formData.annualFloodInsurance) : undefined,
+    annualHOA: formData.annualHOA ? toNumber(formData.annualHOA) : undefined,
+    existingLiensAmount: toNumber(formData.existingLiensAmount)
+  });
+
   const generateQuote = () => {
-    const borrowerData = borrowerForm.getValues();
-    const propertyData = propertyForm.getValues();
-    const detailsData = detailsForm.getValues();
+    const borrowerFormData = borrowerForm.getValues();
+    const propertyFormData = propertyForm.getValues();
+    const detailsFormData = detailsForm.getValues();
+
+    // Convert form data to proper types for validation and calculation
+    convertBorrowerData(borrowerFormData);
+    convertPropertyData(propertyFormData);
+    convertDetailsData(detailsFormData);
 
     // Validate the application
-    const validation = LoanCalculator.validateApplication(borrowerData, propertyData);
+    const validation = LoanCalculator.validateApplication(borrowerFormData, propertyFormData, detailsFormData);
     
     if (!validation.isValid) {
       setValidationErrors(validation.errors);
@@ -139,7 +221,7 @@ export default function LoanApplication() {
     // Additional validations
     const errors: string[] = [];
     
-    if (selectedPrograms.length === 0) {
+    if (!selectedProgram) {
       errors.push('Please select a loan program');
     }
     
@@ -155,25 +237,29 @@ export default function LoanApplication() {
 
     // Generate the quote
     try {
-      const loanProgram = selectedPrograms[0]; // Use first selected program
       const generatedQuote = LoanCalculator.calculateLoanQuote(
-        borrowerData,
-        propertyData,
-        detailsData,
-        loanProgram,
-        selectedTerm
+        borrowerFormData,
+        propertyFormData,
+        detailsFormData,
+        selectedProgram
       );
 
       setQuote(generatedQuote);
       setValidationErrors([]);
       setCurrentTab('quote');
-    } catch {
-      setValidationErrors(['Error generating quote. Please check your inputs.']);
+    } catch (error) {
+      setValidationErrors([error instanceof Error ? error.message : 'Error generating quote. Please check your inputs.']);
       setQuote(null);
     }
   };
 
   const progress = calculateProgress();
+  
+  // Watch property data for loan program form
+  const propertyData = propertyForm.watch();
+  const isPurchase = propertyData.isPurchase;
+  const hasRehab = toNumber(propertyData.rehabNeeded || 0) > 0;
+  const numberOfUnits = toNumber(propertyData.numberOfUnits || 1);
 
   return (
     <div className="min-h-screen bg-background">
@@ -216,28 +302,52 @@ export default function LoanApplication() {
           </CardHeader>
           <CardContent>
             <Tabs value={currentTab} onValueChange={setCurrentTab}>
+              {/* Correct tab order: Borrower → Loan Program → Property → Details → Quote */}
               <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="borrower">Borrower Info</TabsTrigger>
+                <TabsTrigger value="program">Loan Program</TabsTrigger>
                 <TabsTrigger value="property">Property Info</TabsTrigger>
                 <TabsTrigger value="details">Property Details</TabsTrigger>
-                <TabsTrigger value="program">Loan Program</TabsTrigger>
                 <TabsTrigger value="quote">Quote</TabsTrigger>
               </TabsList>
 
               <div className="mt-6">
+                {/* Step 1: Borrower Information */}
                 <TabsContent value="borrower" className="space-y-6">
                   <BorrowerInfoForm form={borrowerForm} />
                   <div className="flex justify-end">
+                    <Button onClick={() => setCurrentTab('program')}>
+                      Next: Loan Program
+                    </Button>
+                  </div>
+                </TabsContent>
+
+                {/* Step 2: Loan Program Selection */}
+                <TabsContent value="program" className="space-y-6">
+                  <LoanProgramForm
+                    selectedProgram={selectedProgram}
+                    selectedTerm={selectedTerm}
+                    onProgramChange={setSelectedProgram}
+                    onTermChange={setSelectedTerm}
+                    isPurchase={isPurchase}
+                    hasRehab={hasRehab}
+                    numberOfUnits={numberOfUnits}
+                  />
+                  <div className="flex justify-between">
+                    <Button variant="outline" onClick={() => setCurrentTab('borrower')}>
+                      Previous
+                    </Button>
                     <Button onClick={() => setCurrentTab('property')}>
                       Next: Property Info
                     </Button>
                   </div>
                 </TabsContent>
 
+                {/* Step 3: Property Information */}
                 <TabsContent value="property" className="space-y-6">
                   <PropertyInfoForm form={propertyForm} />
                   <div className="flex justify-between">
-                    <Button variant="outline" onClick={() => setCurrentTab('borrower')}>
+                    <Button variant="outline" onClick={() => setCurrentTab('program')}>
                       Previous
                     </Button>
                     <Button onClick={() => setCurrentTab('details')}>
@@ -246,27 +356,14 @@ export default function LoanApplication() {
                   </div>
                 </TabsContent>
 
+                {/* Step 4: Property Details */}
                 <TabsContent value="details" className="space-y-6">
-                  <PropertyDetailsForm form={detailsForm} />
-                  <div className="flex justify-between">
-                    <Button variant="outline" onClick={() => setCurrentTab('property')}>
-                      Previous
-                    </Button>
-                    <Button onClick={() => setCurrentTab('program')}>
-                      Next: Loan Program
-                    </Button>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="program" className="space-y-6">
-                  <LoanProgramForm
-                    selectedPrograms={selectedPrograms}
-                    selectedTerm={selectedTerm}
-                    onProgramChange={setSelectedPrograms}
-                    onTermChange={setSelectedTerm}
+                  <PropertyDetailsForm 
+                    form={detailsForm} 
+                    hasRehab={hasRehab}
                   />
                   <div className="flex justify-between">
-                    <Button variant="outline" onClick={() => setCurrentTab('details')}>
+                    <Button variant="outline" onClick={() => setCurrentTab('property')}>
                       Previous
                     </Button>
                     <Button onClick={generateQuote} className="bg-primary">
@@ -275,11 +372,12 @@ export default function LoanApplication() {
                   </div>
                 </TabsContent>
 
+                {/* Step 5: Quote Display */}
                 <TabsContent value="quote" className="space-y-6">
                   <LoanQuoteDisplay quote={quote} errors={validationErrors} />
                   <div className="flex justify-between">
-                    <Button variant="outline" onClick={() => setCurrentTab('program')}>
-                      Back to Program Selection
+                    <Button variant="outline" onClick={() => setCurrentTab('details')}>
+                      Back to Property Details
                     </Button>
                     {quote && (
                       <Button onClick={() => window.print()}>
@@ -293,7 +391,7 @@ export default function LoanApplication() {
           </CardContent>
         </Card>
 
-        {/* Additional Information Cards */}
+        {/* Updated Information Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 max-w-6xl mx-auto">
           <Card>
             <CardHeader>
@@ -301,10 +399,10 @@ export default function LoanApplication() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
-                <div><strong>Bronze (0-1 projects):</strong> 660+ FICO, TX construction only</div>
-                <div><strong>Silver (2-4 projects):</strong> 660+ FICO, TX construction only</div>
-                <div><strong>Gold (5-9 projects):</strong> 660+ FICO, nationwide construction</div>
-                <div><strong>Platinum (10+ projects):</strong> Best rates, nationwide construction</div>
+                <div><strong>Bronze (0-1 total):</strong> 14% rate, 660+ FICO, reimbursement draws</div>
+                <div><strong>Silver (2-4 total):</strong> 13% rate, 660+ FICO, reimbursement draws</div>
+                <div><strong>Gold (5-9 total):</strong> 12% rate, 660+ FICO, advanced draws</div>
+                <div><strong>Platinum (10+ total):</strong> 11% rate, best terms, advanced draws</div>
               </div>
             </CardContent>
           </Card>
@@ -315,11 +413,12 @@ export default function LoanApplication() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
-                <div>• Up to 90% LTV</div>
+                <div>• Up to 90% LTV (1-4 units)</div>
+                <div>• Up to 70% LTV (5-11 units)</div>
                 <div>• 100% rehab coverage</div>
-                <div>• No monthly payments</div>
-                <div>• 5-day fast closing</div>
-                <div>• No tax returns required</div>
+                <div>• No monthly payments during construction/renovation</div>
+                <div>• Only soft credit check required</div>
+                <div>• 12 months standard / 24 months long-term/construction</div>
               </div>
             </CardContent>
           </Card>
@@ -330,11 +429,11 @@ export default function LoanApplication() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
-                <div>• 660+ FICO (680+ for construction)</div>
+                <div>• 660+ FICO (680+ for ground-up construction)</div>
                 <div>• Non-owner occupied only</div>
                 <div>• $100K - $3M loan range</div>
-                <div>• Investment properties only</div>
-                <div>• Liquidity verification required</div>
+                <div>• Liquid cash required (verified with bank statements)</div>
+                <div>• 12+ units contact sales for assistance</div>
               </div>
             </CardContent>
           </Card>
@@ -349,11 +448,10 @@ export default function LoanApplication() {
               This quote is for informational purposes only and does not constitute a loan commitment.
             </p>
             <p className="text-sm text-muted-foreground">
-              Please provide 60 days of current statements to verify liquidity mentioned above.
+              Only a soft credit check is needed to close. Liquid cash will be verified with 60 days of bank statements.
             </p>
             <p className="text-sm text-muted-foreground">
-              Note that we will use a discount against retirement accounts, stocks, and other liquid assets 
-              in calculating total liquidity for our loan requirements.
+              Experience calculated as: Properties Owned + Properties Sold = Total Experience
             </p>
             <div className="flex justify-center space-x-4 text-sm text-muted-foreground">
               <span>© 2025 Nworie Capital</span>
