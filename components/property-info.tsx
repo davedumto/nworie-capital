@@ -25,10 +25,9 @@ export function PropertyInfoForm({ form, selectedProgram }: PropertyInfoFormProp
   
   const numberOfUnits = watch('numberOfUnits') || 1;
   const currentZipCode = watch('zipCode');
-
-  // Determine program characteristics from selectedProgram
   const isPurchase = selectedProgram?.includes('purchase') || false;
   const hasRehab = selectedProgram?.includes('WithRehab') || false;
+  const isDSCR = !hasRehab && selectedProgram; // DSCR programs are without rehab
 
   const handleZipCodeLookup = async () => {
     if (!currentZipCode) return;
@@ -115,7 +114,8 @@ export function PropertyInfoForm({ form, selectedProgram }: PropertyInfoFormProp
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* UPDATED: Added STATE field to address section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label htmlFor="city">City *</Label>
             <Input
@@ -124,6 +124,19 @@ export function PropertyInfoForm({ form, selectedProgram }: PropertyInfoFormProp
             />
             {errors.city && (
               <p className="text-sm text-red-500">{errors.city.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="state">State *</Label>
+            <Input
+              id="state"
+              {...register('state', { required: 'State is required' })}
+              placeholder="TX"
+              maxLength={2}
+            />
+            {errors.state && (
+              <p className="text-sm text-red-500">{errors.state.message}</p>
             )}
           </div>
 
@@ -323,6 +336,8 @@ export function PropertyInfoForm({ form, selectedProgram }: PropertyInfoFormProp
             )}
           </div>
         )}
+
+        {/* REHAB SECTION - Only for rehab programs */}
         {hasRehab && (
           <>
             <div className="bg-orange-50 dark:bg-orange-950 p-4 rounded-lg border border-orange-200 dark:border-orange-800">
@@ -398,16 +413,87 @@ export function PropertyInfoForm({ form, selectedProgram }: PropertyInfoFormProp
             </div>
           </>
         )}
-        {!hasRehab && selectedProgram && (
-          <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-            <h3 className="font-semibold mb-2">DSCR Loan Program</h3>
-            <p className="text-sm text-muted-foreground">
-              This loan program is for income-producing properties without renovation. 
-              The loan will be qualified based on the property`s rental income (Debt Service Coverage Ratio).
-              No renovation costs or ARV are needed for this program.
-            </p>
-          </div>
+
+        {/* ANNUAL EXPENSES SECTION - Only for DSCR programs (Purchase without Rehab + Refinance without Rehab) */}
+        {isDSCR && (
+          <>
+            <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+              <h3 className="font-semibold mb-2">DSCR Loan Program</h3>
+              <p className="text-sm text-muted-foreground">
+                This loan program is for income-producing properties without renovation. 
+                The loan will be qualified based on the property&apos;s rental income (Debt Service Coverage Ratio).
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Annual Expenses</h3>
+              <p className="text-sm text-muted-foreground">
+                Provide the annual property expenses for DSCR calculation.
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="annualTaxes">Annual Property Taxes ($) *</Label>
+                  <Input
+                    id="annualTaxes"
+                    type="number"
+                    {...register('annualTaxes', { 
+                      required: isDSCR ? 'Annual taxes required for DSCR loans' : false,
+                      min: { value: 0, message: 'Cannot be negative' },
+                      valueAsNumber: true
+                    })}
+                  />
+                  {errors.annualTaxes && (
+                    <p className="text-sm text-red-500">{errors.annualTaxes.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="annualInsurance">Annual Insurance ($) *</Label>
+                  <Input
+                    id="annualInsurance"
+                    type="number"
+                    {...register('annualInsurance', { 
+                      required: isDSCR ? 'Annual insurance required for DSCR loans' : false,
+                      min: { value: 0, message: 'Cannot be negative' },
+                      valueAsNumber: true
+                    })}
+                  />
+                  {errors.annualInsurance && (
+                    <p className="text-sm text-red-500">{errors.annualInsurance.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="annualFloodInsurance">Annual Flood Insurance ($)</Label>
+                  <Input
+                    id="annualFloodInsurance"
+                    type="number"
+                    {...register('annualFloodInsurance', { 
+                      min: { value: 0, message: 'Cannot be negative' },
+                      valueAsNumber: true
+                    })}
+                  />
+                  <p className="text-xs text-muted-foreground">Optional</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="annualHOA">Annual HOA Fees ($)</Label>
+                  <Input
+                    id="annualHOA"
+                    type="number"
+                    {...register('annualHOA', { 
+                      min: { value: 0, message: 'Cannot be negative' },
+                      valueAsNumber: true
+                    })}
+                  />
+                  <p className="text-xs text-muted-foreground">Optional</p>
+                </div>
+              </div>
+            </div>
+          </>
         )}
+
         {zipLookupResult?.found && zipLookupResult.classification && (
           <div className={`p-4 rounded-lg border-2 ${
             zipLookupResult.classification.areaType === 'rural'

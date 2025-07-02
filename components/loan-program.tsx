@@ -88,9 +88,9 @@ export function LoanProgramForm({
         'Up to ' + getLTV() + ' LTV',
         '100% rehab funding',
         'No payments during construction',
-        'Interest only on funds used',
         'Soft credit check only',
-        '5-day close with docs'
+        '5-day close with docs',
+        'Liquidity verification may be required'
       ];
     } else {
       return [
@@ -99,10 +99,12 @@ export function LoanProgramForm({
         'No personal income needed',
         '30-year option available',
         'Soft credit check only',
-        '5-day close with docs'
+        '5-day close with docs',
+        'Liquidity verification may be required'
       ];
     }
   };
+  
   if (numberOfUnits >= 12) {
     return (
       <Card className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950">
@@ -149,6 +151,8 @@ export function LoanProgramForm({
             ))}
           </RadioGroup>
         </div>
+
+        {/* UPDATED: "How long?" only appears AFTER program selection */}
         {selectedProgram && (
           <div className="space-y-4">
             <Label className="text-lg font-semibold">How long?</Label>
@@ -167,6 +171,7 @@ export function LoanProgramForm({
             </RadioGroup>
           </div>
         )}
+
         {selectedProgram && (
           <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg">
             <h4 className="font-semibold mb-2">What you get:</h4>
@@ -177,6 +182,7 @@ export function LoanProgramForm({
             </ul>
           </div>
         )}
+
         <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
           <h4 className="font-semibold mb-2">Quick Guide:</h4>
           <ul className="list-disc list-inside space-y-1 text-sm">

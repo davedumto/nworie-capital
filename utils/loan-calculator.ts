@@ -26,21 +26,24 @@ export class LoanCalculator {
     };
   }
 
-  static convertPropertyData(data: PropertyInfo): PropertyInfoProcessed {
-    return {
-      ...data,
-      numberOfUnits: this.toNumber(data.numberOfUnits),
-      purchasePrice: this.toNumber(data.purchasePrice),
-      asIsValue: this.toNumber(data.asIsValue),
-      estimatedPayoff: data.estimatedPayoff ? this.toNumber(data.estimatedPayoff) : undefined,
-      rehabNeeded: data.rehabNeeded ? this.toNumber(data.rehabNeeded) : undefined,
-      rehabAlreadyCompleted: data.rehabAlreadyCompleted ? this.toNumber(data.rehabAlreadyCompleted) : undefined,
-      arv: data.arv ? this.toNumber(data.arv) : undefined,
-      hasComps: data.hasComps || false,
-      earnestMoneyDeposit: data.earnestMoneyDeposit ? this.toNumber(data.earnestMoneyDeposit) : undefined
-    };
-  }
-
+static convertPropertyData(data: PropertyInfo): PropertyInfoProcessed {
+  return {
+    ...data,
+    numberOfUnits: this.toNumber(data.numberOfUnits),
+    purchasePrice: this.toNumber(data.purchasePrice),
+    asIsValue: this.toNumber(data.asIsValue),
+    estimatedPayoff: data.estimatedPayoff ? this.toNumber(data.estimatedPayoff) : undefined,
+    rehabNeeded: data.rehabNeeded ? this.toNumber(data.rehabNeeded) : undefined,
+    rehabAlreadyCompleted: data.rehabAlreadyCompleted ? this.toNumber(data.rehabAlreadyCompleted) : undefined,
+    arv: data.arv ? this.toNumber(data.arv) : undefined,
+    hasComps: data.hasComps || false,
+    earnestMoneyDeposit: data.earnestMoneyDeposit ? this.toNumber(data.earnestMoneyDeposit) : undefined,
+    annualTaxes: data.annualTaxes ? this.toNumber(data.annualTaxes) : undefined,
+    annualInsurance: data.annualInsurance ? this.toNumber(data.annualInsurance) : undefined,
+    annualFloodInsurance: data.annualFloodInsurance ? this.toNumber(data.annualFloodInsurance) : undefined,
+    annualHOA: data.annualHOA ? this.toNumber(data.annualHOA) : undefined
+  };
+}
   static convertDetailsData(data: PropertyDetails): PropertyDetailsProcessed {
     return {
       ...data,

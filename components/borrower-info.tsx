@@ -112,9 +112,12 @@ export function BorrowerInfoForm({ form }: BorrowerInfoFormProps) {
             {errors.fico && (
               <p className="text-sm text-red-500">{errors.fico.message}</p>
             )}
-            <p className="text-xs text-muted-foreground">
-              Need 660+ (680+ for construction)
-            </p>
+            <div className="text-xs text-muted-foreground space-y-1">
+              <p>• Minimum 660 for Renovation Loans</p>
+              <p>• Minimum 680 for Construction Loans</p>
+              <p>• Minimum 650 for DSCR Loans</p>
+              <p>• Scores above 750+ get best DSCR pricing</p>
+            </div>
           </div>
         </div>
 

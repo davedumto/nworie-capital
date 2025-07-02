@@ -19,6 +19,7 @@ export interface BorrowerInfo {
 export interface PropertyInfo {
   subjectPropertyAddress: string;
   city: string;
+  state: string;
   zipCode: string;
   propertyType: string;
   numberOfUnits: string | number;
@@ -30,7 +31,11 @@ export interface PropertyInfo {
   rehabAlreadyCompleted?: string | number; 
   arv?: string | number; 
   hasComps?: boolean; 
-  earnestMoneyDeposit?: string | number; 
+  earnestMoneyDeposit?: string | number;
+  annualTaxes?: string | number;
+  annualInsurance?: string | number;
+  annualFloodInsurance?: string | number;
+  annualHOA?: string | number;
 }
 
 export interface PropertyDetails {
@@ -41,7 +46,7 @@ export interface PropertyDetails {
   afterRenovationBedrooms?: string | number; 
   currentBathrooms?: string | number; 
   afterRenovationBathrooms?: string | number; 
-  monthlyIncome?: string | number; // For DSCR loans
+  monthlyIncome?: string | number; 
   isActualRent: boolean;
   hasActiveLease: boolean;
   annualTaxes: string | number; 
@@ -76,6 +81,7 @@ export interface BorrowerInfoProcessed {
 export interface PropertyInfoProcessed {
   subjectPropertyAddress: string;
   city: string;
+  state: string; 
   zipCode: string;
   propertyType: string;
   numberOfUnits: number;
@@ -87,7 +93,11 @@ export interface PropertyInfoProcessed {
   rehabAlreadyCompleted?: number; 
   arv?: number; 
   hasComps?: boolean; 
-  earnestMoneyDeposit?: number; 
+  earnestMoneyDeposit?: number;
+  annualTaxes?: number;
+  annualInsurance?: number;
+  annualFloodInsurance?: number;
+  annualHOA?: number;
 }
 
 export interface PropertyDetailsProcessed {
@@ -130,7 +140,7 @@ export interface LoanTerm {
 export type LoanTermType = 'shortTerm12' | 'shortTerm24' | 'dscr30';
 export type InvestorTier = 'Bronze' | 'Silver' | 'Gold' | 'Platinum';
 
-// The 4 main programs we offer
+
 export type LoanProgramType = 
   | 'purchaseWithRehab' 
   | 'purchaseWithoutRehab' 
