@@ -9,269 +9,193 @@ import {
   PropertyDetailsProcessed
 } from '@/types/loan';
 
-type AvailableLoanPrograms = {
-  purchaseWithRehab: boolean;
-  purchaseWithoutRehab: boolean;
-  refinanceWithRehab: boolean;
-  refinanceWithoutRehab: boolean;
-  allowedTerms: {
-    shortTerm: boolean;
-    longTerm: boolean;
-  };
-};
-
 export class LoanCalculator {
-  // Helper function to safely convert string | number to number
-  private static toNumber(value: string | number | undefined): number {
-    if (typeof value === 'number') return value;
-    if (typeof value === 'string') {
-      const num = Number(value);
-      return isNaN(num) ? 0 : num;
-    }
-    return 0;
-  }
 
-  // Convert form data to processed data for calculations
-  static convertBorrowerData(formData: BorrowerInfo): BorrowerInfoProcessed {
+  private static toNumber(val: unknown): number {
+    const num = Number(val);
+    return isNaN(num) ? 0 : num;
+  }
+  static convertBorrowerData(data: BorrowerInfo): BorrowerInfoProcessed {
     return {
-      ...formData,
-      propertiesOwned: this.toNumber(formData.propertiesOwned),
-      propertiesSold: this.toNumber(formData.propertiesSold),
-      totalExperience: this.toNumber(formData.totalExperience),
-      fico: this.toNumber(formData.fico),
-      yearsAtPrimaryResidence: this.toNumber(formData.yearsAtPrimaryResidence)
+      ...data,
+      propertiesOwned: this.toNumber(data.propertiesOwned),
+      propertiesSold: this.toNumber(data.propertiesSold),
+      totalExperience: this.toNumber(data.totalExperience),
+      fico: this.toNumber(data.fico),
+      yearsAtPrimaryResidence: this.toNumber(data.yearsAtPrimaryResidence)
     };
   }
 
-  static convertPropertyData(formData: PropertyInfo): PropertyInfoProcessed {
+  static convertPropertyData(data: PropertyInfo): PropertyInfoProcessed {
     return {
-      ...formData,
-      numberOfUnits: this.toNumber(formData.numberOfUnits),
-      purchasePrice: this.toNumber(formData.purchasePrice),
-      asIsValue: this.toNumber(formData.asIsValue),
-      estimatedPayoff: this.toNumber(formData.estimatedPayoff),
-      rehabNeeded: this.toNumber(formData.rehabNeeded),
-      rehabAlreadyCompleted: this.toNumber(formData.rehabAlreadyCompleted),
-      arv: this.toNumber(formData.arv),
-      earnestMoneyDeposit: this.toNumber(formData.earnestMoneyDeposit)
+      ...data,
+      numberOfUnits: this.toNumber(data.numberOfUnits),
+      purchasePrice: this.toNumber(data.purchasePrice),
+      asIsValue: this.toNumber(data.asIsValue),
+      estimatedPayoff: data.estimatedPayoff ? this.toNumber(data.estimatedPayoff) : undefined,
+      rehabNeeded: data.rehabNeeded ? this.toNumber(data.rehabNeeded) : undefined,
+      rehabAlreadyCompleted: data.rehabAlreadyCompleted ? this.toNumber(data.rehabAlreadyCompleted) : undefined,
+      arv: data.arv ? this.toNumber(data.arv) : undefined,
+      hasComps: data.hasComps || false,
+      earnestMoneyDeposit: data.earnestMoneyDeposit ? this.toNumber(data.earnestMoneyDeposit) : undefined
     };
   }
 
-  static convertDetailsData(formData: PropertyDetails): PropertyDetailsProcessed {
+  static convertDetailsData(data: PropertyDetails): PropertyDetailsProcessed {
     return {
-      ...formData,
-      liquidCashAvailable: this.toNumber(formData.liquidCashAvailable),
-      currentSquareFootage: this.toNumber(formData.currentSquareFootage),
-      afterRenovationSquareFootage: this.toNumber(formData.afterRenovationSquareFootage),
-      currentBedrooms: formData.currentBedrooms ? this.toNumber(formData.currentBedrooms) : undefined,
-      afterRenovationBedrooms: formData.afterRenovationBedrooms ? this.toNumber(formData.afterRenovationBedrooms) : undefined,
-      currentBathrooms: formData.currentBathrooms ? this.toNumber(formData.currentBathrooms) : undefined,
-      afterRenovationBathrooms: formData.afterRenovationBathrooms ? this.toNumber(formData.afterRenovationBathrooms) : undefined,
-      monthlyIncome: formData.monthlyIncome ? this.toNumber(formData.monthlyIncome) : undefined,
-      annualTaxes: this.toNumber(formData.annualTaxes),
-      annualInsurance: this.toNumber(formData.annualInsurance),
-      annualFloodInsurance: formData.annualFloodInsurance ? this.toNumber(formData.annualFloodInsurance) : undefined,
-      annualHOA: formData.annualHOA ? this.toNumber(formData.annualHOA) : undefined,
-      existingLiensAmount: this.toNumber(formData.existingLiensAmount)
+      ...data,
+      liquidCashAvailable: this.toNumber(data.liquidCashAvailable),
+      currentSquareFootage: this.toNumber(data.currentSquareFootage),
+      afterRenovationSquareFootage: this.toNumber(data.afterRenovationSquareFootage),
+      currentBedrooms: data.currentBedrooms ? this.toNumber(data.currentBedrooms) : undefined,
+      afterRenovationBedrooms: data.afterRenovationBedrooms ? this.toNumber(data.afterRenovationBedrooms) : undefined,
+      currentBathrooms: data.currentBathrooms ? this.toNumber(data.currentBathrooms) : undefined,
+      afterRenovationBathrooms: data.afterRenovationBathrooms ? this.toNumber(data.afterRenovationBathrooms) : undefined,
+      monthlyIncome: data.monthlyIncome ? this.toNumber(data.monthlyIncome) : undefined,
+      annualTaxes: this.toNumber(data.annualTaxes),
+      annualInsurance: this.toNumber(data.annualInsurance),
+      annualFloodInsurance: data.annualFloodInsurance ? this.toNumber(data.annualFloodInsurance) : undefined,
+      annualHOA: data.annualHOA ? this.toNumber(data.annualHOA) : undefined,
+      existingLiensAmount: this.toNumber(data.existingLiensAmount)
     };
   }
 
-  static calculateTotalExperience(propertiesOwned: number, propertiesSold: number): number {
-    return propertiesOwned + propertiesSold;
+  static calculateTotalExperience(owned: number, sold: number): number {
+    return owned + sold;
   }
 
-  static getInvestorTier(totalExperience: number): InvestorTier {
-    if (totalExperience >= 10) return 'Platinum';
-    if (totalExperience >= 5) return 'Gold';
-    if (totalExperience >= 2) return 'Silver';
+  static getInvestorTier(totalExp: number): InvestorTier {
+    if (totalExp >= 10) return 'Platinum';
+    if (totalExp >= 5) return 'Gold';
+    if (totalExp >= 2) return 'Silver';
     return 'Bronze';
   }
 
   static getInterestRate(tier: InvestorTier, creditScore: number): number {
-    // New interest rate structure based on tier
-    let baseRate: number;
+
+    let rate = 14.0;
     
     switch (tier) {
-      case 'Platinum':
-        baseRate = 11.0;
-        break;
-      case 'Gold':
-        baseRate = 12.0;
-        break;
-      case 'Silver':
-        baseRate = 13.0;
-        break;
-      case 'Bronze':
-        baseRate = 14.0;
-        break;
+      case 'Platinum': rate = 11.0; break;
+      case 'Gold': rate = 12.0; break;
+      case 'Silver': rate = 13.0; break;
     }
-
-    // Credit score adjustments
     if (creditScore >= 750) {
-      baseRate -= 0.25;
+      rate -= 0.25;
     } else if (creditScore >= 700) {
-      baseRate -= 0.1;
+      rate -= 0.1;
     } else if (creditScore < 680) {
-      baseRate += 0.5;
+      rate += 0.5;
     }
 
-    return Math.round(baseRate * 100) / 100;
+    return Math.round(rate * 100) / 100;
   }
 
-  static getLoanToValue(numberOfUnits: number): number {
-    if (numberOfUnits <= 4) return 0.90; // 90%
-    if (numberOfUnits <= 11) return 0.70; // 70%
-    return 0; // Contact sales for 12+ units
-  }
-
-  static getAvailableLoanPrograms(
-    isPurchase: boolean,
-    hasRehab: boolean
-  ): AvailableLoanPrograms {
-    if (isPurchase) {
-      if (hasRehab) {
-        return {
-          purchaseWithRehab: true,
-          purchaseWithoutRehab: false,
-          refinanceWithRehab: false,
-          refinanceWithoutRehab: false,
-          allowedTerms: {
-            shortTerm: true,
-            longTerm: false // Purchase with rehab is short-term only
-          }
-        };
-      } else {
-        return {
-          purchaseWithRehab: false,
-          purchaseWithoutRehab: true,
-          refinanceWithRehab: false,
-          refinanceWithoutRehab: false,
-          allowedTerms: {
-            shortTerm: true,
-            longTerm: true // Purchase without rehab can be either
-          }
-        };
-      }
-    } else {
-      // Refinance
-      if (hasRehab) {
-        return {
-          purchaseWithRehab: false,
-          purchaseWithoutRehab: false,
-          refinanceWithRehab: true,
-          refinanceWithoutRehab: false,
-          allowedTerms: {
-            shortTerm: true,
-            longTerm: false // Refinance with rehab is short-term only
-          }
-        };
-      } else {
-        return {
-          purchaseWithRehab: false,
-          purchaseWithoutRehab: false,
-          refinanceWithRehab: false,
-          refinanceWithoutRehab: true,
-          allowedTerms: {
-            shortTerm: true,
-            longTerm: true // Refinance without rehab can be either
-          }
-        };
-      }
-    }
-  }
-
-  static getLoanTermMonths(loanProgram: string, hasRehab: boolean, isGroundUp: boolean): number {
-    if (isGroundUp) return 24; // Ground-up construction is 24 months
-    if (hasRehab) return 12; // Renovations are 12 months
-    // Long-term loans are 24 months (not 360)
-    return loanProgram.includes('longTerm') ? 24 : 12;
+  static getLoanToValue(units: number): number {
+    if (units <= 4) return 0.90;
+    if (units <= 11) return 0.70;
+    return 0; 
   }
 
   static getDrawSchedule(tier: InvestorTier): string {
     return (tier === 'Gold' || tier === 'Platinum') ? 'Advanced' : 'Reimbursement';
   }
 
-  // Updated method that accepts form data and converts it internally
-  static calculateLoanQuote(
-    borrowerInfoForm: BorrowerInfo,
-    propertyInfoForm: PropertyInfo,
-    propertyDetailsForm: PropertyDetails,
-    loanProgram: string
-  ): LoanQuote {
-    // Convert form data to processed data for calculations
-    const borrowerInfo = this.convertBorrowerData(borrowerInfoForm);
-    const propertyInfo = this.convertPropertyData(propertyInfoForm);
-    const propertyDetails = this.convertDetailsData(propertyDetailsForm);
 
-    const totalExperience = this.calculateTotalExperience(borrowerInfo.propertiesOwned, borrowerInfo.propertiesSold);
-    const tier = this.getInvestorTier(totalExperience);
-    const interestRate = this.getInterestRate(tier, borrowerInfo.fico);
-    const loanToValue = this.getLoanToValue(propertyInfo.numberOfUnits);
-    
-    if (loanToValue === 0) {
-      throw new Error('Properties with 12+ units require contacting sales for assistance');
+  private static isPurchase(program: string): boolean {
+    return program.includes('purchase');
+  }
+
+  private static hasRehab(program: string): boolean {
+    return program.includes('WithRehab');
+  }
+
+  private static getTermMonths(term: string): number {
+    switch (term) {
+      case 'shortTerm12': return 12;
+      case 'shortTerm24': return 24;
+      case 'dscr30': return 360;
+      default: return 12;
     }
+  }
 
-    // Calculate loan amount based on LTV
-    const maxLoanBasedOnPurchase = propertyInfo.purchasePrice * loanToValue;
-    
-    // Calculate ARV cap (75% of ARV)
-    const arvCap = propertyInfo.arv * 0.75;
-    
-    // Loan amount calculation
-    const loanAmount = Math.min(
-      maxLoanBasedOnPurchase + propertyInfo.rehabNeeded,
-      arvCap
-    );
+  private static getProgramName(program: string): string {
+    switch (program) {
+      case 'purchaseWithRehab': return 'Purchase with Rehab (Fix-n-Flip)';
+      case 'purchaseWithoutRehab': return 'Purchase without Rehab (DSCR)';
+      case 'refinanceWithRehab': return 'Refinance with Rehab';
+      case 'refinanceWithoutRehab': return 'Refinance without Rehab (DSCR)';
+      default: return program;
+    }
+  }
 
-    // Calculate initial advance
-    const initialAdvance = propertyInfo.purchasePrice * loanToValue;
+  private static calcMonthlyPayment(loanAmount: number, rate: number, months: number): number {
+    if (months <= 24) return 0;
     
-    // Calculate down payment
-    const downPayment = propertyInfo.purchasePrice * (1 - loanToValue);
+    const monthlyRate = rate / 100 / 12;
+    const payment = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, months)) / 
+                   (Math.pow(1 + monthlyRate, months) - 1);
+    return Math.round(payment * 100) / 100;
+  }
+
+  static calculateLoanQuote(
+    borrowerForm: BorrowerInfo,
+    propertyForm: PropertyInfo,
+    detailsForm: PropertyDetails,
+    program: string,
+    term: string = 'shortTerm12'
+  ): LoanQuote {
+    const borrower = this.convertBorrowerData(borrowerForm);
+    const property = this.convertPropertyData(propertyForm);
+    const details = this.convertDetailsData(detailsForm);
+
+    const isPurchaseProgram = this.isPurchase(program);
+    const isRehabProgram = this.hasRehab(program);
+
+    const totalExp = this.calculateTotalExperience(borrower.propertiesOwned, borrower.propertiesSold);
+    const tier = this.getInvestorTier(totalExp);
+    const rate = this.getInterestRate(tier, borrower.fico);
+    const ltv = this.getLoanToValue(property.numberOfUnits);
     
-    // Calculate fees - 3 points for origination
-    const originationFee = loanAmount * 0.03; // 3 points
+    if (ltv === 0) {
+      throw new Error('12+ units need to call sales');
+    }
+    const maxLoanBase = property.purchasePrice * ltv;
+    const rehabBudget = isRehabProgram ? (property.rehabNeeded || 0) : 0;
+    const arv = isRehabProgram ? (property.arv || property.purchasePrice) : property.purchasePrice;
+    const arvCap = isRehabProgram ? arv * 0.75 : maxLoanBase;
+    
+    const loanAmount = Math.min(maxLoanBase + rehabBudget, arvCap);
+    const initialAdvance = property.purchasePrice * ltv;
+    const downPayment = property.purchasePrice * (1 - ltv);
+    const origFee = loanAmount * 0.03; 
     const underwriting = 1000;
     const docPrep = 1995;
+    const titleEst = property.purchasePrice * 0.004 + 1000;
+    const taxEst = details.annualTaxes || (property.purchasePrice * 0.015);
+    const insEst = details.annualInsurance || 1140;
     
-    // Use actual property details for title, tax, and insurance estimates
-    const titleEstimate = propertyInfo.purchasePrice * 0.004 + 1000;
-    const taxEstimate = propertyDetails.annualTaxes || (propertyInfo.purchasePrice * 0.015);
-    const insuranceEstimate = propertyDetails.annualInsurance || 1140;
-    const closingFee = 0; // Waived
+    const totalClosing = origFee + underwriting + docPrep + titleEst + taxEst + insEst;
+    const holdbackBase = initialAdvance + rehabBudget;
+    const paymentHoldback = holdbackBase * (rate / 100);
     
-    const totalClosingCosts = originationFee + underwriting + docPrep + 
-                            titleEstimate + taxEstimate + insuranceEstimate + closingFee;
-    
-    // Calculate holdback using the specific formula:
-    // Payment holdback = (initial advance + rehab budget) * interest rate for investor tier
-    const holdbackBase = initialAdvance + propertyInfo.rehabNeeded;
-    const paymentHoldback = holdbackBase * (interestRate / 100);
-    
-    const monthlyEscrow = (propertyDetails.annualTaxes + propertyDetails.annualInsurance) / 12;
-    
-    // Determine loan term months
-    const isGroundUp = propertyInfo.rehabNeeded > propertyInfo.purchasePrice * 0.5;
-    const hasRehab = propertyInfo.rehabNeeded > 0;
-    const termMonths = this.getLoanTermMonths(loanProgram, hasRehab, isGroundUp);
-    
-    // Calculate total from borrower
-    const earnestMoney = propertyInfo.isPurchase ? propertyInfo.earnestMoneyDeposit : 0;
-    const totalFromBorrower = downPayment + totalClosingCosts + earnestMoney;
+    const monthlyEscrow = (details.annualTaxes + details.annualInsurance) / 12;
+    const termMonths = this.getTermMonths(term);
+    const earnestMoney = isPurchaseProgram ? (property.earnestMoneyDeposit || 0) : 0;
+    const totalFromBorrower = downPayment + totalClosing + earnestMoney;
     
     return {
-      loanProgram,
-      purchasePrice: propertyInfo.purchasePrice,
-      rehabBudget: propertyInfo.rehabNeeded,
-      arv: propertyInfo.arv,
+      loanProgram: this.getProgramName(program),
+      purchasePrice: property.purchasePrice,
+      rehabBudget,
+      arv,
       loanAmount,
-      creditScore: borrowerInfo.fico,
+      creditScore: borrower.fico,
       investorTier: tier,
-      interestRate,
+      interestRate: rate,
       loanTerm: termMonths,
-      repaymentType: 'Dutch',
-      monthlyPayment: 0, // No monthly payments for short-term
+      repaymentType: termMonths <= 24 ? 'Dutch (Interest Only)' : 'Principal & Interest',
+      monthlyPayment: this.calcMonthlyPayment(loanAmount, rate, termMonths),
       arvCap,
       initialAdvance,
       drawSchedule: this.getDrawSchedule(tier),
@@ -280,100 +204,88 @@ export class LoanCalculator {
       downPayment,
       earnestMoneyDeposit: earnestMoney,
       fees: {
-        originationFee,
+        originationFee: origFee,
         underwriting,
         docPrep,
-        titleEstimate,
-        taxEstimate,
-        insuranceEstimate,
-        closingFee,
-        totalClosingCosts
+        titleEstimate: titleEst,
+        taxEstimate: taxEst,
+        insuranceEstimate: insEst,
+        closingFee: 0, // Waived
+        totalClosingCosts: totalClosing
       },
       totalFromBorrower,
       liquidityRequired: totalFromBorrower
     };
   }
 
-  // Updated validation method that accepts form data and converts it internally
   static validateApplication(
-    borrowerInfoForm: BorrowerInfo,
-    propertyInfoForm: PropertyInfo,
-    propertyDetailsForm: PropertyDetails
+    borrowerForm: BorrowerInfo,
+    propertyForm: PropertyInfo,
+    detailsForm: PropertyDetails,
+    program: string = ''
   ): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
     
-    // Convert form data to processed data for validation
-    const borrowerInfo = this.convertBorrowerData(borrowerInfoForm);
-    const propertyInfo = this.convertPropertyData(propertyInfoForm);
-    const propertyDetails = this.convertDetailsData(propertyDetailsForm);
+    const borrower = this.convertBorrowerData(borrowerForm);
+    const property = this.convertPropertyData(propertyForm);
+    const details = this.convertDetailsData(detailsForm);
     
-    // Liquid cash validation - if 0, reject
-    if (propertyDetails.liquidCashAvailable === 0) {
-      errors.push('Liquid cash available cannot be zero. We are not interested in applications with no liquid cash.');
+    const isRehabProgram = this.hasRehab(program);
+    const isPurchaseProgram = this.isPurchase(program);
+    if (details.liquidCashAvailable === 0) {
+      errors.push('Need liquid cash to qualify');
       return { isValid: false, errors };
     }
-    
-    // Credit score validation
-    if (borrowerInfo.fico < 660) {
-      errors.push('Minimum credit score of 660 required');
+    if (borrower.fico < 660) {
+      errors.push('Need 660+ credit score');
     }
     
-    // Units validation
-    if (propertyInfo.numberOfUnits >= 12) {
-      errors.push('Properties with 12+ units require contacting sales for assistance');
+    if (property.numberOfUnits >= 12) {
+      errors.push('12+ units - call sales');
     }
     
-    // Construction loan validation
-    if (propertyInfo.rehabNeeded > propertyInfo.purchasePrice * 0.5) {
-      // Likely construction loan
-      if (borrowerInfo.fico < 680) {
-        errors.push('Ground-up construction requires minimum credit score of 680');
-      }
+    if (property.purchasePrice < 100000 || property.purchasePrice > 3000000) {
+      errors.push('Loan must be $100K - $3M');
+    }
+    if (!property.city.trim()) errors.push('City required');
+    if (!property.zipCode.trim()) errors.push('Zip code required');
+    if (isRehabProgram) {
+      const rehabNeeded = property.rehabNeeded || 0;
+      const arv = property.arv || 0;
       
-      const totalExperience = this.calculateTotalExperience(borrowerInfo.propertiesOwned, borrowerInfo.propertiesSold);
-      const tier = this.getInvestorTier(totalExperience);
-      if (tier === 'Bronze' || tier === 'Silver') {
-        errors.push('Ground-up construction only available to Gold and Platinum tier investors');
-      }
-    }
-    
-    // Loan amount validation
-    if (propertyInfo.purchasePrice < 100000 || propertyInfo.purchasePrice > 3000000) {
-      errors.push('Loan amount must be between $100,000 and $3,000,000');
-    }
-    
-    // ARV validation
-    if (propertyInfo.arv <= propertyInfo.purchasePrice + propertyInfo.rehabNeeded) {
-      errors.push('ARV must be higher than purchase price plus rehab costs');
-    }
-    
-    // Required field validations
-    if (!propertyInfo.city.trim()) {
-      errors.push('City is required');
-    }
-    
-    if (!propertyInfo.zipCode.trim()) {
-      errors.push('Zip code is required');
-    }
-    
-    // Income loan validations
-    if (propertyDetails.isIncomeLoan) {
-      if (!propertyDetails.monthlyIncome || propertyDetails.monthlyIncome <= 0) {
-        errors.push('Monthly income is required for income loans');
-      }
+      if (rehabNeeded <= 0) errors.push('Rehab budget required');
+      if (arv <= 0) errors.push('ARV required');
       
-      if (!propertyDetails.annualTaxes || propertyDetails.annualTaxes <= 0) {
-        errors.push('Annual taxes are required for income loans');
+      if (arv > 0 && arv <= property.purchasePrice + rehabNeeded) {
+        errors.push('ARV must be higher than purchase + rehab');
       }
-      
-      if (!propertyDetails.annualInsurance || propertyDetails.annualInsurance <= 0) {
-        errors.push('Annual insurance is required for income loans');
+
+      if (rehabNeeded > property.purchasePrice * 0.5) {
+        if (borrower.fico < 680) {
+          errors.push('Construction needs 680+ credit');
+        }
+        
+        const totalExp = this.calculateTotalExperience(borrower.propertiesOwned, borrower.propertiesSold);
+        const tier = this.getInvestorTier(totalExp);
+        if (tier === 'Bronze' || tier === 'Silver') {
+          errors.push('Construction only for Gold/Platinum investors');
+        }
       }
     }
+    if (isPurchaseProgram && (!property.earnestMoneyDeposit || property.earnestMoneyDeposit <= 0)) {
+      errors.push('Earnest money required for purchases');
+    }
+    if (!isRehabProgram && details.isIncomeLoan) {
+      if (!details.monthlyIncome || details.monthlyIncome <= 0) {
+        errors.push('Monthly income required for DSCR');
+      }
+    }
+    if (!details.annualTaxes || details.annualTaxes <= 0) {
+      errors.push('Annual taxes required');
+    }
     
-    // Purchase specific validations
-    if (propertyInfo.isPurchase && (!propertyInfo.earnestMoneyDeposit || propertyInfo.earnestMoneyDeposit <= 0)) {
-      errors.push('Earnest money deposit amount is required for purchases');
+    if (!details.annualInsurance || details.annualInsurance <= 0) {
+      errors.push('Annual insurance required');
     }
     
     return {
@@ -381,48 +293,25 @@ export class LoanCalculator {
       errors
     };
   }
-
-  // Helper method for form validation (accepts form data directly)
   static validateFormData(
-    borrowerData: BorrowerInfo,
-    propertyData: PropertyInfo,
-    detailsData: PropertyDetails
+    borrower: BorrowerInfo,
+    property: PropertyInfo,
+    details: PropertyDetails
   ): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
 
-    // Basic required field validation (string fields)
-    if (!borrowerData.guarantorFullName?.trim()) {
-      errors.push('Guarantor full name is required');
-    }
+    if (!borrower.guarantorFullName?.trim()) errors.push('Name required');
+    if (!borrower.guarantorEmail?.trim()) errors.push('Email required');
+    if (!property.subjectPropertyAddress?.trim()) errors.push('Property address required');
 
-    if (!borrowerData.guarantorEmail?.trim()) {
-      errors.push('Guarantor email is required');
-    }
+    const fico = this.toNumber(borrower.fico);
+    if (fico === 0) errors.push('FICO score required');
 
-    if (!propertyData.subjectPropertyAddress?.trim()) {
-      errors.push('Property address is required');
-    }
+    const price = this.toNumber(property.purchasePrice);
+    if (price === 0) errors.push('Purchase price required');
 
-    // Numeric field validation (convert and validate)
-    const fico = this.toNumber(borrowerData.fico);
-    if (fico === 0) {
-      errors.push('FICO score is required');
-    }
-
-    const purchasePrice = this.toNumber(propertyData.purchasePrice);
-    if (purchasePrice === 0) {
-      errors.push('Purchase price is required');
-    }
-
-    const arv = this.toNumber(propertyData.arv);
-    if (arv === 0) {
-      errors.push('ARV is required');
-    }
-
-    const liquidCash = this.toNumber(detailsData.liquidCashAvailable);
-    if (liquidCash === 0) {
-      errors.push('Liquid cash available is required');
-    }
+    const cash = this.toNumber(details.liquidCashAvailable);
+    if (cash === 0) errors.push('Liquid cash required');
 
     return {
       isValid: errors.length === 0,

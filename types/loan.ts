@@ -6,9 +6,9 @@ export interface BorrowerInfo {
   propertiesSold: string | number;
   totalExperience: string | number; 
   fico: string | number;
-  socialSecurity: string;
+  socialSecurity?: string; 
   usCitizen: boolean;
-  dateOfBirth: string;
+  dateOfBirth?: string; 
   primaryResidenceAddress: string;
   ownOrRentPrimary: 'own' | 'rent';
   yearsAtPrimaryResidence: string | number;
@@ -25,13 +25,12 @@ export interface PropertyInfo {
   purchasePrice: string | number;
   asIsValue: string | number;
   purchaseDate: string;
-  estimatedPayoff: string | number;
-  rehabNeeded: string | number;
-  rehabAlreadyCompleted: string | number;
-  arv: string | number;
-  hasComps: boolean;
-  isPurchase: boolean;
-  earnestMoneyDeposit: string | number; 
+  estimatedPayoff?: string | number; 
+  rehabNeeded?: string | number; 
+  rehabAlreadyCompleted?: string | number; 
+  arv?: string | number; 
+  hasComps?: boolean; 
+  earnestMoneyDeposit?: string | number; 
 }
 
 export interface PropertyDetails {
@@ -39,24 +38,23 @@ export interface PropertyDetails {
   currentSquareFootage: string | number;
   afterRenovationSquareFootage: string | number;
   currentBedrooms?: string | number; 
-  afterRenovationBedrooms?: string | number; // Optional
-  currentBathrooms?: string | number; // Optional
-  afterRenovationBathrooms?: string | number; // Optional
-  monthlyIncome?: string | number; // Only mandatory for income loans
+  afterRenovationBedrooms?: string | number; 
+  currentBathrooms?: string | number; 
+  afterRenovationBathrooms?: string | number; 
+  monthlyIncome?: string | number; // For DSCR loans
   isActualRent: boolean;
   hasActiveLease: boolean;
-  annualTaxes: string | number; // Mandatory for income loans
-  annualInsurance: string | number; // Mandatory for income loans
+  annualTaxes: string | number; 
+  annualInsurance: string | number; 
   annualFloodInsurance?: string | number;
   annualHOA?: string | number;
-  propertyManager?: string; // Optional
+  propertyManager?: string; 
   sponsorIntentToOccupy: boolean;
   existingLiens: boolean;
   existingLiensAmount: string | number;
-  isIncomeLoan: boolean; // Determines if monthly income and expenses are required
+  isIncomeLoan: boolean; 
 }
 
-// Processed types for calculations (numbers only)
 export interface BorrowerInfoProcessed {
   guarantorFullName: string;
   guarantorEmail: string;
@@ -65,9 +63,9 @@ export interface BorrowerInfoProcessed {
   propertiesSold: number;
   totalExperience: number;
   fico: number;
-  socialSecurity: string;
+  socialSecurity?: string; 
   usCitizen: boolean;
-  dateOfBirth: string;
+  dateOfBirth?: string; 
   primaryResidenceAddress: string;
   ownOrRentPrimary: 'own' | 'rent';
   yearsAtPrimaryResidence: number;
@@ -84,13 +82,12 @@ export interface PropertyInfoProcessed {
   purchasePrice: number;
   asIsValue: number;
   purchaseDate: string;
-  estimatedPayoff: number;
-  rehabNeeded: number;
-  rehabAlreadyCompleted: number;
-  arv: number;
-  hasComps: boolean;
-  isPurchase: boolean;
-  earnestMoneyDeposit: number;
+  estimatedPayoff?: number; 
+  rehabNeeded?: number; 
+  rehabAlreadyCompleted?: number; 
+  arv?: number; 
+  hasComps?: boolean; 
+  earnestMoneyDeposit?: number; 
 }
 
 export interface PropertyDetailsProcessed {
@@ -118,33 +115,27 @@ export interface PropertyDetailsProcessed {
 export interface LoanProgram {
   id: string;
   name: string;
-  purchaseWithRehab: boolean;
-  purchaseWithoutRehab: boolean;
-  refinanceWithRehab: boolean;
-  refinanceWithoutRehab: boolean;
-  allowedTerms: ('short' | 'long')[]; // Which terms are allowed for this program
+  hasRehab: boolean;
+  isPurchase: boolean;
+  allowedTerms: LoanTermType[];
 }
 
 export interface LoanTerm {
   id: string;
   name: string;
   months: number;
-  isShortTerm: boolean;
+  description: string;
 }
 
+export type LoanTermType = 'shortTerm12' | 'shortTerm24' | 'dscr30';
 export type InvestorTier = 'Bronze' | 'Silver' | 'Gold' | 'Platinum';
 
-// New interface for available loan programs based on property type
-export interface AvailableLoanPrograms {
-  purchaseWithRehab: boolean;
-  purchaseWithoutRehab: boolean;
-  refinanceWithRehab: boolean;
-  refinanceWithoutRehab: boolean;
-  allowedTerms: {
-    shortTerm: boolean;
-    longTerm: boolean;
-  };
-}
+// The 4 main programs we offer
+export type LoanProgramType = 
+  | 'purchaseWithRehab' 
+  | 'purchaseWithoutRehab' 
+  | 'refinanceWithRehab' 
+  | 'refinanceWithoutRehab';
 
 export interface LoanQuote {
   loanProgram: string;
@@ -179,12 +170,31 @@ export interface LoanQuote {
   liquidityRequired: number;
 }
 
-// Combined loan application type for final submission
+export interface LeadData {
+  id: string;
+  timestamp: string;
+  borrowerInfo: {
+    name: string;
+    email: string;
+    phone: string;
+    experience: number;
+    tier: InvestorTier;
+  };
+  loanProgram: LoanProgramType;
+  quote?: {
+    loanAmount: number;
+    interestRate: number;
+    loanTerm: number;
+    totalFromBorrower: number;
+  };
+  status: 'quote-generated' | 'in-progress' | 'incomplete';
+}
+
 export interface LoanApplication {
   borrower: BorrowerInfoProcessed;
   property: PropertyInfoProcessed;
   details: PropertyDetailsProcessed;
-  program: string;
-  term: string;
+  program: LoanProgramType;
+  term: LoanTermType;
   quote?: LoanQuote;
 }

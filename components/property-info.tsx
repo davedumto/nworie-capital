@@ -8,24 +8,27 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Button } from '@/components/ui/button';
 import { ZipCodeLookup, ZipCodeLookupResult } from '@/utils/zip-code-lookup';
 import { Loader2, MapPin, Building2, Trees } from 'lucide-react';
 
 interface PropertyInfoFormProps {
   form: UseFormReturn<PropertyInfo>;
+  selectedProgram: string; 
 }
 
-export  function PropertyInfoForm({ form }: PropertyInfoFormProps) {
+export function PropertyInfoForm({ form, selectedProgram }: PropertyInfoFormProps) {
   const { register, formState: { errors }, setValue, watch } = form;
   
   const [zipLookupResult, setZipLookupResult] = useState<ZipCodeLookupResult | null>(null);
   const [isLookingUp, setIsLookingUp] = useState(false);
   
-  const isPurchase = watch('isPurchase');
   const numberOfUnits = watch('numberOfUnits') || 1;
   const currentZipCode = watch('zipCode');
+
+  // Determine program characteristics from selectedProgram
+  const isPurchase = selectedProgram?.includes('purchase') || false;
+  const hasRehab = selectedProgram?.includes('WithRehab') || false;
 
   const handleZipCodeLookup = async () => {
     if (!currentZipCode) return;
@@ -72,30 +75,35 @@ export  function PropertyInfoForm({ form }: PropertyInfoFormProps) {
     );
   };
 
+  const getProgramTitle = () => {
+    switch (selectedProgram) {
+      case 'purchaseWithRehab':
+        return 'Purchase with Rehab (Fix-n-Flip) - Property Information';
+      case 'purchaseWithoutRehab':
+        return 'Purchase without Rehab (DSCR) - Property Information';
+      case 'refinanceWithRehab':
+        return 'Refinance with Rehab - Property Information';
+      case 'refinanceWithoutRehab':
+        return 'Refinance without Rehab (DSCR) - Property Information';
+      default:
+        return 'Property Information';
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Property Information</CardTitle>
+        <CardTitle>{getProgramTitle()}</CardTitle>
+        {selectedProgram && (
+          <p className="text-sm text-muted-foreground">
+            {hasRehab 
+              ? 'Provide property details including renovation costs and after-repair value (ARV).'
+              : 'Provide property details for this DSCR loan based on current rental income potential.'
+            }
+          </p>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Purchase vs Refinance */}
-        <div className="space-y-4">
-          <Label className="text-lg font-semibold">Transaction Type</Label>
-          <RadioGroup
-            value={isPurchase ? 'purchase' : 'refinance'}
-            onValueChange={(value) => setValue('isPurchase', value === 'purchase')}
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="purchase" id="purchase" />
-              <Label htmlFor="purchase">Purchase</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="refinance" id="refinance" />
-              <Label htmlFor="refinance">Refinance</Label>
-            </div>
-          </RadioGroup>
-        </div>
-
         <div className="space-y-2">
           <Label htmlFor="subjectPropertyAddress">Subject Property Address *</Label>
           <Input
@@ -176,34 +184,6 @@ export  function PropertyInfoForm({ form }: PropertyInfoFormProps) {
                             ? 'Population Analysis'
                             : 'Pattern Analysis'
                         }</p>
-                      </div>
-
-                      {/* Loan implications based on area type */}
-                      <div className={`p-3 rounded-md text-sm ${
-                        zipLookupResult.classification.areaType === 'rural'
-                          ? 'bg-amber-50 border border-amber-200 dark:bg-amber-950 dark:border-amber-800'
-                          : 'bg-blue-50 border border-blue-200 dark:bg-blue-950 dark:border-blue-800'
-                      }`}>
-                        <p className="font-medium mb-1">
-                          {zipLookupResult.classification.areaType === 'rural' ? ' Rural Area Notes:' : ' Urban Area Notes:'}
-                        </p>
-                        <ul className="list-disc list-inside space-y-1 text-xs">
-                          {zipLookupResult.classification.areaType === 'rural' ? (
-                            <>
-                              <li>May qualify for USDA rural development programs</li>
-                              <li>Lower property values typically mean lower loan amounts</li>
-                              <li>Consider longer commute times for tenants</li>
-                              <li>Limited comparable sales data</li>
-                            </>
-                          ) : (
-                            <>
-                              <li>Higher property values and rental demand</li>
-                              <li>More comparable sales data available</li>
-                              <li>Better access to services and transportation</li>
-                              <li>Potentially higher renovation costs</li>
-                            </>
-                          )}
-                        </ul>
                       </div>
                     </div>
                   </div>
@@ -343,64 +323,91 @@ export  function PropertyInfoForm({ form }: PropertyInfoFormProps) {
             )}
           </div>
         )}
+        {hasRehab && (
+          <>
+            <div className="bg-orange-50 dark:bg-orange-950 p-4 rounded-lg border border-orange-200 dark:border-orange-800">
+              <h3 className="font-semibold mb-2">Renovation Details</h3>
+              <p className="text-sm text-muted-foreground">
+                Since you selected a rehab program, please provide renovation costs and after-repair value (ARV).
+              </p>
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="rehabNeeded">Rehab Needed ($) *</Label>
-            <Input
-              id="rehabNeeded"
-              type="number"
-              {...register('rehabNeeded', { 
-                required: 'Rehab needed is required (enter 0 if none)',
-                min: { value: 0, message: 'Cannot be negative' },
-                valueAsNumber: true
-              })}
-            />
-            {errors.rehabNeeded && (
-              <p className="text-sm text-red-500">{errors.rehabNeeded.message}</p>
-            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="rehabNeeded">Rehab Budget ($) *</Label>
+                <Input
+                  id="rehabNeeded"
+                  type="number"
+                  {...register('rehabNeeded', { 
+                    required: hasRehab ? 'Rehab budget is required for rehab programs' : false,
+                    min: { value: 1, message: 'Must be greater than 0 for rehab programs' },
+                    valueAsNumber: true
+                  })}
+                />
+                {errors.rehabNeeded && (
+                  <p className="text-sm text-red-500">{errors.rehabNeeded.message}</p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Total estimated renovation costs
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="rehabAlreadyCompleted">Rehab Already Completed ($)</Label>
+                <Input
+                  id="rehabAlreadyCompleted"
+                  type="number"
+                  {...register('rehabAlreadyCompleted', { 
+                    min: { value: 0, message: 'Cannot be negative' },
+                    valueAsNumber: true
+                  })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Amount already spent on renovations
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="arv">ARV - After Repair Value ($) *</Label>
+                <Input
+                  id="arv"
+                  type="number"
+                  {...register('arv', { 
+                    required: hasRehab ? 'ARV is required for rehab programs' : false,
+                    min: { value: 1, message: 'Must be greater than 0' },
+                    valueAsNumber: true
+                  })}
+                />
+                {errors.arv && (
+                  <p className="text-sm text-red-500">{errors.arv.message}</p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Estimated property value after renovations
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-6">
+                <Checkbox
+                  id="hasComps"
+                  onCheckedChange={(checked) => setValue('hasComps', checked as boolean)}
+                />
+                <Label htmlFor="hasComps">Do you have Comps for ARV?</Label>
+              </div>
+            </div>
+          </>
+        )}
+        {!hasRehab && selectedProgram && (
+          <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+            <h3 className="font-semibold mb-2">DSCR Loan Program</h3>
+            <p className="text-sm text-muted-foreground">
+              This loan program is for income-producing properties without renovation. 
+              The loan will be qualified based on the property`s rental income (Debt Service Coverage Ratio).
+              No renovation costs or ARV are needed for this program.
+            </p>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="rehabAlreadyCompleted">Rehab Already Completed ($)</Label>
-            <Input
-              id="rehabAlreadyCompleted"
-              type="number"
-              {...register('rehabAlreadyCompleted', { 
-                min: { value: 0, message: 'Cannot be negative' },
-                valueAsNumber: true
-              })}
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="arv">ARV - After Repair Value ($) *</Label>
-            <Input
-              id="arv"
-              type="number"
-              {...register('arv', { 
-                required: 'ARV is required',
-                min: { value: 1, message: 'Must be greater than 0' },
-                valueAsNumber: true
-              })}
-            />
-            {errors.arv && (
-              <p className="text-sm text-red-500">{errors.arv.message}</p>
-            )}
-          </div>
-
-          <div className="flex items-center space-x-2 pt-6">
-            <Checkbox
-              id="hasComps"
-              onCheckedChange={(checked) => setValue('hasComps', checked as boolean)}
-            />
-            <Label htmlFor="hasComps">Do you have Comps?</Label>
-          </div>
-        </div>
-
-        {/* Quick Area Classification Summary */}
+        )}
         {zipLookupResult?.found && zipLookupResult.classification && (
           <div className={`p-4 rounded-lg border-2 ${
             zipLookupResult.classification.areaType === 'rural'

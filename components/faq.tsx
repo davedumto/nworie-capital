@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 
-// Types
+
 interface FAQItemProps {
   question: string;
   answer: string;
@@ -10,7 +10,6 @@ interface FAQItemProps {
   onToggle: () => void;
 }
 
-// FAQ data
 const faqData = [
   {
     question: "What documents are required for Pre-approval?",
@@ -51,8 +50,6 @@ const FAQItem: React.FC<FAQItemProps> = ({ question, answer, isOpen, onToggle })
           }`}
         />
       </button>
-      
-      {/* Dropdown Content */}
       <div 
         className={`overflow-hidden transition-all duration-300 ease-in-out ${
           isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
@@ -78,7 +75,6 @@ export default function FAQSection() {
   return (
     <section className="py-20 bg-white">
       <div className="max-w-8xl mx-auto px-[2em]">
-        {/* Header */}
         <div className="text-left mb-12">
           <p className="text-primary font-semibold text-lg mb-4 tracking-wide uppercase">
             FAQS
@@ -90,8 +86,6 @@ export default function FAQSection() {
             Find quick answers to your most common questions about Nworie Capital`s lending programs and services.
           </p>
         </div>
-
-        {/* FAQ Items */}
         <div className="space-y-4">
           {faqData.map((faq, index) => (
             <FAQItem
