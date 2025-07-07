@@ -360,11 +360,12 @@ export default function LoanApplication() {
             <CardContent>
               <div className="space-y-2 text-sm">
                 <div>• Up to 90% LTV (1-4 units)</div>
-                <div>• Up to 70% LTV (5-11 units)</div>
+                <div>• Up to 70% LTV (5-10 units)</div>
+                 <div>• 11+ units call us</div>
                 <div>• 100% rehab coverage</div>
                 <div>• No payments during renovation</div>
-                <div>• 30-year fixed available</div>
-                <div>• Soft credit check only</div>
+                <div>• 30-year fixed for DSCR loans</div>
+                <div>• Soft credit check</div>
               </div>
             </CardContent>
           </Card>
@@ -378,8 +379,7 @@ export default function LoanApplication() {
                 <div>• 660+ FICO (680+ for construction)</div>
                 <div>• Non-owner occupied only</div>
                 <div>• $100K - $3M loan range</div>
-                <div>• Liquid cash verified</div>
-                <div>• 12+ units call us</div>
+                <div>• Liquidity verification may be required</div>
               </div>
             </CardContent>
           </Card>

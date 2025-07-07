@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Button } from '@/components/ui/button';
 import { ZipCodeLookup, ZipCodeLookupResult } from '@/utils/zip-code-lookup';
 import { Loader2, MapPin, Building2, Trees } from 'lucide-react';
@@ -28,6 +29,7 @@ export function PropertyInfoForm({ form, selectedProgram }: PropertyInfoFormProp
   const isPurchase = selectedProgram?.includes('purchase') || false;
   const hasRehab = selectedProgram?.includes('WithRehab') || false;
   const isDSCR = !hasRehab && selectedProgram; // DSCR programs are without rehab
+  const isActualRent = watch('isActualRent');
 
   const handleZipCodeLookup = async () => {
     if (!currentZipCode) return;
@@ -114,7 +116,6 @@ export function PropertyInfoForm({ form, selectedProgram }: PropertyInfoFormProp
           )}
         </div>
 
-        {/* UPDATED: Added STATE field to address section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label htmlFor="city">City *</Label>
@@ -337,6 +338,130 @@ export function PropertyInfoForm({ form, selectedProgram }: PropertyInfoFormProp
           </div>
         )}
 
+        
+        {isDSCR && (
+          <div className="space-y-4">
+            <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+              <h3 className="font-semibold mb-2">DSCR Loan - Monthly Rent Income</h3>
+              <p className="text-sm text-muted-foreground">
+                This loan program qualifies based on the property`s rental income (Debt Service Coverage Ratio).
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="monthlyIncome">Monthly Rent ($) *</Label>
+                <Input
+                  id="monthlyIncome"
+                  type="number"
+                  {...register('monthlyIncome', { 
+                    required: 'Monthly rent required for DSCR loans',
+                    min: { value: 0, message: 'Cannot be negative' }
+                  })}
+                  placeholder="2500"
+                />
+                {errors.monthlyIncome && (
+                  <p className="text-sm text-red-500">{errors.monthlyIncome.message}</p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Expected monthly rental income
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <Label>Rent Type</Label>
+                <RadioGroup
+                  defaultValue={isActualRent ? "actual" : "market"}
+                  onValueChange={(value) => setValue('isActualRent', value === 'actual')}
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="actual" id="actual" />
+                    <Label htmlFor="actual">Actual (have lease)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="market" id="market" />
+                    <Label htmlFor="market">Market estimate</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ANNUAL EXPENSES SECTION - Only for DSCR programs */}
+        {isDSCR && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Annual Expenses</h3>
+            <p className="text-sm text-muted-foreground">
+              Provide the annual property expenses for DSCR calculation.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="annualTaxes">Annual Property Taxes ($) *</Label>
+                <Input
+                  id="annualTaxes"
+                  type="number"
+                  {...register('annualTaxes', { 
+                    required: isDSCR ? 'Annual taxes required for DSCR loans' : false,
+                    min: { value: 0, message: 'Cannot be negative' },
+                    valueAsNumber: true
+                  })}
+                  placeholder="3500"
+                />
+                {errors.annualTaxes && (
+                  <p className="text-sm text-red-500">{errors.annualTaxes.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="annualInsurance">Annual Insurance ($) *</Label>
+                <Input
+                  id="annualInsurance"
+                  type="number"
+                  {...register('annualInsurance', { 
+                    required: isDSCR ? 'Annual insurance required for DSCR loans' : false,
+                    min: { value: 0, message: 'Cannot be negative' },
+                    valueAsNumber: true
+                  })}
+                  placeholder="1200"
+                />
+                {errors.annualInsurance && (
+                  <p className="text-sm text-red-500">{errors.annualInsurance.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="annualFloodInsurance">Annual Flood Insurance ($)</Label>
+                <Input
+                  id="annualFloodInsurance"
+                  type="number"
+                  {...register('annualFloodInsurance', { 
+                    min: { value: 0, message: 'Cannot be negative' },
+                    valueAsNumber: true
+                  })}
+                  placeholder="500"
+                />
+                <p className="text-xs text-muted-foreground">Optional</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="annualHOA">Annual HOA Fees ($)</Label>
+                <Input
+                  id="annualHOA"
+                  type="number"
+                  {...register('annualHOA', { 
+                    min: { value: 0, message: 'Cannot be negative' },
+                    valueAsNumber: true
+                  })}
+                  placeholder="1800"
+                />
+                <p className="text-xs text-muted-foreground">Optional</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* REHAB SECTION - Only for rehab programs */}
         {hasRehab && (
           <>
@@ -358,6 +483,7 @@ export function PropertyInfoForm({ form, selectedProgram }: PropertyInfoFormProp
                     min: { value: 1, message: 'Must be greater than 0 for rehab programs' },
                     valueAsNumber: true
                   })}
+                  placeholder="50000"
                 />
                 {errors.rehabNeeded && (
                   <p className="text-sm text-red-500">{errors.rehabNeeded.message}</p>
@@ -376,6 +502,7 @@ export function PropertyInfoForm({ form, selectedProgram }: PropertyInfoFormProp
                     min: { value: 0, message: 'Cannot be negative' },
                     valueAsNumber: true
                   })}
+                  placeholder="0"
                 />
                 <p className="text-xs text-muted-foreground">
                   Amount already spent on renovations
@@ -394,6 +521,7 @@ export function PropertyInfoForm({ form, selectedProgram }: PropertyInfoFormProp
                     min: { value: 1, message: 'Must be greater than 0' },
                     valueAsNumber: true
                   })}
+                  placeholder="300000"
                 />
                 {errors.arv && (
                   <p className="text-sm text-red-500">{errors.arv.message}</p>
@@ -409,86 +537,6 @@ export function PropertyInfoForm({ form, selectedProgram }: PropertyInfoFormProp
                   onCheckedChange={(checked) => setValue('hasComps', checked as boolean)}
                 />
                 <Label htmlFor="hasComps">Do you have Comps for ARV?</Label>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* ANNUAL EXPENSES SECTION - Only for DSCR programs (Purchase without Rehab + Refinance without Rehab) */}
-        {isDSCR && (
-          <>
-            <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-              <h3 className="font-semibold mb-2">DSCR Loan Program</h3>
-              <p className="text-sm text-muted-foreground">
-                This loan program is for income-producing properties without renovation. 
-                The loan will be qualified based on the property&apos;s rental income (Debt Service Coverage Ratio).
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Annual Expenses</h3>
-              <p className="text-sm text-muted-foreground">
-                Provide the annual property expenses for DSCR calculation.
-              </p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="annualTaxes">Annual Property Taxes ($) *</Label>
-                  <Input
-                    id="annualTaxes"
-                    type="number"
-                    {...register('annualTaxes', { 
-                      required: isDSCR ? 'Annual taxes required for DSCR loans' : false,
-                      min: { value: 0, message: 'Cannot be negative' },
-                      valueAsNumber: true
-                    })}
-                  />
-                  {errors.annualTaxes && (
-                    <p className="text-sm text-red-500">{errors.annualTaxes.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="annualInsurance">Annual Insurance ($) *</Label>
-                  <Input
-                    id="annualInsurance"
-                    type="number"
-                    {...register('annualInsurance', { 
-                      required: isDSCR ? 'Annual insurance required for DSCR loans' : false,
-                      min: { value: 0, message: 'Cannot be negative' },
-                      valueAsNumber: true
-                    })}
-                  />
-                  {errors.annualInsurance && (
-                    <p className="text-sm text-red-500">{errors.annualInsurance.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="annualFloodInsurance">Annual Flood Insurance ($)</Label>
-                  <Input
-                    id="annualFloodInsurance"
-                    type="number"
-                    {...register('annualFloodInsurance', { 
-                      min: { value: 0, message: 'Cannot be negative' },
-                      valueAsNumber: true
-                    })}
-                  />
-                  <p className="text-xs text-muted-foreground">Optional</p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="annualHOA">Annual HOA Fees ($)</Label>
-                  <Input
-                    id="annualHOA"
-                    type="number"
-                    {...register('annualHOA', { 
-                      min: { value: 0, message: 'Cannot be negative' },
-                      valueAsNumber: true
-                    })}
-                  />
-                  <p className="text-xs text-muted-foreground">Optional</p>
-                </div>
               </div>
             </div>
           </>

@@ -36,7 +36,10 @@ export interface PropertyInfo {
   annualInsurance?: string | number;
   annualFloodInsurance?: string | number;
   annualHOA?: string | number;
+   monthlyIncome?: number;
+   isActualRent?: boolean;
 }
+
 
 export interface PropertyDetails {
   liquidCashAvailable: string | number; 
